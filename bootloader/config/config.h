@@ -24,7 +24,6 @@ typedef struct _hekate_config
 	u32 autoboot;
 	u32 autoboot_list;
 	u32 bootwait;
-	u32 customlogo;
 	u32 verification;
 	// Global temporary config.
 	int se_keygen_done;
@@ -35,7 +34,6 @@ void set_default_configuration();
 int create_config_entry();
 void config_autoboot();
 void config_bootdelay();
-void config_customlogo();
 void config_verification();
 
 #endif /* _CONFIG_H_ */

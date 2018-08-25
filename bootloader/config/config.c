@@ -41,7 +41,6 @@ void set_default_configuration()
 	h_cfg.autoboot = 0;
 	h_cfg.autoboot_list = 0;
 	h_cfg.bootwait = 3;
-	h_cfg.customlogo = 0;
 	h_cfg.verification = 2;
 	h_cfg.se_keygen_done = 0;
 	h_cfg.sbar_time_keeping = 0;
@@ -70,9 +69,6 @@ int create_config_entry()
 		f_puts(lbuf, &fp);
 		f_puts("\nbootwait=", &fp);
 		itoa(h_cfg.bootwait, lbuf, 10);
-		f_puts(lbuf, &fp);
-		f_puts("\ncustomlogo=", &fp);
-		itoa(h_cfg.customlogo, lbuf, 10);
 		f_puts(lbuf, &fp);
 		f_puts("\nverification=", &fp);
 		itoa(h_cfg.verification, lbuf, 10);
@@ -418,64 +414,6 @@ void config_bootdelay()
 	free(delay_text);
 
 	if (temp_bootwait == NULL)
-		return;
-	btn_wait();
-}
-
-void config_customlogo()
-{
-	gfx_clear_grey(&gfx_ctxt, 0x1B);
-	gfx_con_setpos(&gfx_con, 0, 0);
-
-	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * 5);
-	u32 *cb_values = (u32 *)malloc(sizeof(u32) * 2);
-
-	for (u32 j = 0; j < 2; j++)
-	{
-		cb_values[j] = j;
-		ments[j + 2].type = MENT_CHOICE;
-		ments[j + 2].data = &cb_values[j];
-	}
-
-	ments[0].type = MENT_BACK;
-	ments[0].caption = "Back";
-
-	ments[1].type = MENT_CHGLINE;
-
-	if (h_cfg.customlogo)
-	{
-		ments[2].caption = " Disable";
-		ments[3].caption = "*Enable";
-
-	}
-	else
-	{
-		ments[2].caption = "*Disable";
-		ments[3].caption = " Enable";
-	}
-
-	memset(&ments[4], 0, sizeof(ment_t));
-	menu_t menu = {ments, "Custom bootlogo", 0, 0};
-
-	u32 *temp_customlogo = (u32 *)tui_do_menu(&gfx_con, &menu);
-	if (temp_customlogo != NULL)
-	{
-		gfx_clear_grey(&gfx_ctxt, 0x1B);
-		gfx_con_setpos(&gfx_con, 0, 0);
-
-		h_cfg.customlogo = *(u32 *)temp_customlogo;
-		// Save choice to ini file.
-		if (!create_config_entry())
-			gfx_puts(&gfx_con, "\nConfiguration was saved!\n");
-		else
-			EPRINTF("\nConfiguration saving failed!");
-		gfx_puts(&gfx_con, "\nPress any key...");
-	}
-
-	free(ments);
-	free(cb_values);
-
-	if (temp_customlogo == NULL)
 		return;
 	btn_wait();
 }

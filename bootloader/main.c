@@ -2202,23 +2202,7 @@ void auto_launch_firmware()
 {
 	auto_launch_update();
 
-	u8 *BOOTLOGO = NULL;
 	char *payload_path = NULL;
-
-	struct _bmp_data
-	{
-		u32 size;
-		u32 size_x;
-		u32 size_y;
-		u32 offset;
-		u32 pos_x;
-		u32 pos_y;
-	};
-
-	struct _bmp_data bmpData;
-	bool backlightEnabled = false;
-	bool bootlogoFound = false;
-	char *bootlogoCustomEntry = NULL;
 
 	ini_sec_t *cfg_sec = NULL;
 	LIST_INIT(ini_sections);
@@ -2250,8 +2234,6 @@ void auto_launch_firmware()
 								h_cfg.autoboot_list = atoi(kv->val);
 							else if (!strcmp("bootwait", kv->key))
 								h_cfg.bootwait = atoi(kv->val);
-							else if (!strcmp("customlogo", kv->key))
-								h_cfg.customlogo = atoi(kv->val);
 							else if (!strcmp("verification", kv->key))
 								h_cfg.verification = atoi(kv->val);
 						}
@@ -2264,8 +2246,6 @@ void auto_launch_firmware()
 						cfg_sec = ini_clone_section(ini_sec);
 						LIST_FOREACH_ENTRY(ini_kv_t, kv, &cfg_sec->kvs, link)
 						{
-							if (!strcmp("logopath", kv->key))
-								bootlogoCustomEntry = kv->val;
 							gfx_printf(&gfx_con, "\n%s=%s\n\n", kv->key, kv->val);
 						}
 						break;
@@ -2280,7 +2260,6 @@ void auto_launch_firmware()
 				list_init(&ini_sections);
 				ini_free_section(cfg_sec);
 				boot_entry_id = 1;
-				bootlogoCustomEntry = NULL;
 
 				if (ini_parse(&ini_list_sections, "bootloader/ini", true))
 				{
@@ -2296,8 +2275,6 @@ void auto_launch_firmware()
 								cfg_sec = ini_clone_section(ini_sec_list);
 								LIST_FOREACH_ENTRY(ini_kv_t, kv, &cfg_sec->kvs, link)
 								{
-									if (!strcmp("logopath", kv->key))
-										bootlogoCustomEntry = kv->val;
 									gfx_printf(&gfx_con, "\n%s=%s\n\n", kv->key, kv->val);
 								}
 								break;
@@ -2326,75 +2303,6 @@ void auto_launch_firmware()
 	}
 	else
 		goto out;
-
-	if (h_cfg.customlogo)
-	{
-		u8 *bitmap = NULL;
-		if (bootlogoCustomEntry != NULL) // Check if user set custom logo path at the boot entry.
-		{
-			bitmap = (u8 *)sd_file_read(bootlogoCustomEntry);
-			if (bitmap == NULL) // Custom entry bootlogo not found, trying default custom one.
-				bitmap = (u8 *)sd_file_read("bootloader/bootlogo.bmp");
-		}
-		else // User has not set a custom logo path.
-			bitmap = (u8 *)sd_file_read("bootloader/bootlogo.bmp");
-
-		if (bitmap != NULL)
-		{
-			// Get values manually to avoid unaligned access.
-			bmpData.size = bitmap[2] | bitmap[3] << 8 |
-				bitmap[4] << 16 | bitmap[5] << 24;
-			bmpData.offset = bitmap[10] | bitmap[11] << 8 |
-				bitmap[12] << 16 | bitmap[13] << 24;
-			bmpData.size_x = bitmap[18] | bitmap[19] << 8 |
-				bitmap[20] << 16 | bitmap[21] << 24;
-			bmpData.size_y = bitmap[22] | bitmap[23] << 8 |
-				bitmap[24] << 16 | bitmap[25] << 24;
-			// Sanity check.
-			if (bitmap[0] == 'B' &&
-				bitmap[1] == 'M' &&
-				bitmap[28] == 32 && //
-				bmpData.size_x <= 720 &&
-				bmpData.size_y <= 1280)
-			{
-				if ((bmpData.size - bmpData.offset) <= 0x400000)
-				{
-					// Avoid unaligned access from BM 2-byte MAGIC and remove header.
-					BOOTLOGO = (u8 *)malloc(0x400000);
-					memcpy(BOOTLOGO, bitmap + bmpData.offset, bmpData.size - bmpData.offset);
-					free(bitmap);
-					// Center logo if res < 720x1280.
-					bmpData.pos_x = (720  - bmpData.size_x) >> 1;
-					bmpData.pos_y = (1280 - bmpData.size_y) >> 1;
-					// Get background color from 1st pixel.
-					if (bmpData.size_x < 720 || bmpData.size_y < 1280)
-						gfx_clear_color(&gfx_ctxt, *(u32 *)BOOTLOGO);
-
-					bootlogoFound = true;
-				}
-			}
-			else
-				free(bitmap);
-		}
-	}
-
-	// Render boot logo.
-	if (bootlogoFound)
-	{
-		gfx_render_bmp_argb(&gfx_ctxt, (u32 *)BOOTLOGO, bmpData.size_x, bmpData.size_y,
-			bmpData.pos_x, bmpData.pos_y);
-	}
-	else
-	{
-		gfx_clear_grey(&gfx_ctxt, 0x1B);
-		BOOTLOGO = (void *)malloc(0x4000);
-		blz_uncompress_srcdest(BOOTLOGO_BLZ, SZ_BOOTLOGO_BLZ, BOOTLOGO, SZ_BOOTLOGO);
-		gfx_set_rect_grey(&gfx_ctxt, BOOTLOGO, X_BOOTLOGO, Y_BOOTLOGO, 326, 544);
-	}
-	free(BOOTLOGO);
-
-	display_backlight(true);
-	backlightEnabled = 1;
 
 	// Wait before booting. If VOL- is pressed go into bootloader menu.
 	u32 btn = btn_wait_timeout(h_cfg.bootwait * 1000, BTN_VOL_DOWN);
@@ -2435,9 +2343,6 @@ out:
 
 	sd_unmount();
 	gfx_con.mute = false;
-
-	if (!backlightEnabled)
-		display_backlight(true);
 }
 
 void toggle_autorcm(bool enable)
@@ -2983,7 +2888,6 @@ ment_t ment_options[] = {
 	MDEF_CHGLINE(),
 	MDEF_HANDLER("Auto boot", config_autoboot),
 	MDEF_HANDLER("Boot time delay", config_bootdelay),
-	MDEF_HANDLER("Custom boot logo", config_customlogo),
 	MDEF_END()
 };
 
@@ -3111,22 +3015,28 @@ void ipl_main()
 	//uart_wait_idle(UART_C, UART_TX_IDLE);
 
 	// Save sdram lp0 config.
-	ianos_loader(true, "bootloader/sys/libsys_lp0.bso", DRAM_LIB, (void *)sdram_get_params());
-
 	display_init();
 
 	u32 *fb = display_init_framebuffer();
 	gfx_init_ctxt(&gfx_ctxt, fb, 720, 1280, 768, true);
+
+	gfx_con_init(&gfx_con, &gfx_ctxt);
+	
+	gfx_clear_grey(&gfx_ctxt, 0x1B);
+	void *BOOTLOGO = (void *)malloc(0x4000);
+	blz_uncompress_srcdest(BOOTLOGO_BLZ, SZ_BOOTLOGO_BLZ, BOOTLOGO, SZ_BOOTLOGO);
+	gfx_set_rect_grey(&gfx_ctxt, BOOTLOGO, X_BOOTLOGO, Y_BOOTLOGO, 326, 544);
+	free(BOOTLOGO);
+
+	// Enable backlight after initializing gfx
+	display_backlight(true);
 
 #ifdef MENU_LOGO_ENABLE
 	Kc_MENU_LOGO = (u8 *)malloc(0x6000);
 	blz_uncompress_srcdest(Kc_MENU_LOGO_blz, SZ_MENU_LOGO_BLZ, Kc_MENU_LOGO, SZ_MENU_LOGO);
 #endif //MENU_LOGO_ENABLE
 
-	gfx_con_init(&gfx_con, &gfx_ctxt);
-
-	// Enable backlight after initializing gfx
-	//display_backlight(true);
+	//ianos_loader(true, "bootloader/sys/libsys_lp0.bso", DRAM_LIB, (void *)sdram_get_params());
 
 	set_default_configuration();
 	// Load saved configuration and auto boot if enabled.
