@@ -107,6 +107,23 @@ bool sd_mount()
 		}
 		else
 		{
+			if (res == 13)
+			{
+				sdmmc_storage_end(&sd_storage);
+				if (!sdmmc_storage_init_sd(&sd_storage, &sd_sdmmc, SDMMC_1, SDMMC_BUS_WIDTH_1, 11))
+				{
+					EPRINTF("Failed to init SD card.\nMake sure that it is inserted.");
+				}
+				else
+				{
+					if (f_mount(&sd_fs, "", 1) == FR_OK)
+					{
+						sd_mounted = 1;
+						return true;
+					}
+				}
+			}
+			
 			EPRINTFARGS("Failed to mount SD card (FatFS Error %d).\nMake sure that a FAT partition exists..", res);
 		}
 	}
