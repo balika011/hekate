@@ -118,17 +118,22 @@ static const u8 _gfx_font[] = {
 	0x00, 0x00, 0x00, 0x4C, 0x32, 0x00, 0x00, 0x00  // Char 126 (~)
 };
 
-void gfx_init_ctxt(gfx_ctxt_t *ctxt, u32 *fb, u32 width, u32 height, u32 stride)
-{
-	ctxt->fb = fb;
-	ctxt->width = width;
-	ctxt->height = height;
-	ctxt->stride = stride;
+void gfx_init_ctxt(gfx_ctxt_t *ctxt)
+{	
+	ctxt->fb = (u32 *)0xC0000000;
+	ctxt->width = 1280;
+	ctxt->height = 720;
+	ctxt->stride = 768;
+	
+	u32 fb_size = ctxt->width * ctxt->stride * 4;
+	
+	memset(ctxt->fb, 0, fb_size * 2);
+	set_active_framebuffer(ctxt->fb);
 }
 
 void gfx_clear_grey(gfx_ctxt_t *ctxt, u8 color)
 {
-	memset(ctxt->fb, color, 0x3C0000);
+	memset(ctxt->fb, color, ctxt->width * ctxt->stride * 4);
 }
 
 void gfx_clear_color(gfx_ctxt_t *ctxt, u32 color)

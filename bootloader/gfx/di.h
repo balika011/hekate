@@ -348,6 +348,6 @@ void display_color_screen(u32 color);
 void display_backlight(bool enable);
 
 /*! Init display in full 1280x720 resolution (B8G8R8A8, line stride 768, framebuffer size = 1280*768*4 bytes). */
-u32 *display_init_framebuffer();
+void set_active_framebuffer(u32 *address);
 
 #endif

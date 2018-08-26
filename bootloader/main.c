@@ -2772,11 +2772,9 @@ int main()
 	//uart_send(UART_C, (u8 *)0x40000000, 0x10000);
 	//uart_wait_idle(UART_C, UART_TX_IDLE);
 
-	// Save sdram lp0 config.
 	display_init();
 
-	u32 *fb = display_init_framebuffer();
-	gfx_init_ctxt(&gfx_ctxt, fb, 1280, 720, 768);
+	gfx_init_ctxt(&gfx_ctxt);
 
 	gfx_con_init(&gfx_con, &gfx_ctxt);
 	

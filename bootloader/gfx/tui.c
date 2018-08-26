@@ -31,6 +31,20 @@ extern u8 *Kc_MENU_LOGO;
 #define Y_POS_MENU_LOGO   (con->gfx_ctxt->height - 200)
 #endif //MENU_LOGO_ENABLE
 
+struct button
+{
+	u32 min_x;
+	u32 min_y;
+	u32 max_x;
+	u32 max_y;
+};
+		
+#define DRAW_BUTTON_OUTLINE(ctxt, button) \
+	gfx_line(ctxt, button.min_x, button.min_y, button.max_x, button.min_y, 0xFF555555); \
+	gfx_line(ctxt, button.min_x, button.min_y, button.min_x, button.max_y, 0xFF555555); \
+	gfx_line(ctxt, button.max_x, button.min_y, button.max_x, button.max_y, 0xFF555555); \
+	gfx_line(ctxt, button.min_x, button.max_y, button.max_x, button.max_y, 0xFF555555);
+
 extern hekate_config h_cfg;
 
 void tui_sbar(gfx_con_t *con, bool force_update)
@@ -100,7 +114,12 @@ void tui_pbar(gfx_con_t *con, int x, int y, u32 val, u32 fgcol, u32 bgcol)
 void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 {
 	int idx = 0, prev_idx = 0, cnt = 0x7FFFFFFF;
-
+	
+	if (con->gfx_ctxt->fb == (u32 *)0xC0000000)
+		con->gfx_ctxt->fb += con->gfx_ctxt->width * con->gfx_ctxt->stride * 4;
+	else
+		con->gfx_ctxt->fb  = (u32 *)0xC0000000;
+	
 	gfx_clear_partial_grey(con->gfx_ctxt, 0x1B, 0, con->gfx_ctxt->height - 24);
 	tui_sbar(con, true);
 
@@ -160,14 +179,6 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 
 		// Print help and battery status.
 		gfx_con_getpos(con, &con->savedx,  &con->savedy);
-
-		struct button
-		{
-			u32 min_x;
-			u32 min_y;
-			u32 max_x;
-			u32 max_y;
-		};
 		
 		struct button up;
 		up.min_x = 30;
@@ -192,27 +203,12 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 		back.min_y = con->gfx_ctxt->height - 24 - 110;
 		back.max_x = con->gfx_ctxt->width - 130;
 		back.max_y = con->gfx_ctxt->height - 24 - 30;
-		
-		gfx_line(con->gfx_ctxt, up.min_x, up.min_y, up.max_x, up.min_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, up.min_x, up.min_y, up.min_x, up.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, up.max_x, up.min_y, up.max_x, up.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, up.min_x, up.max_y, up.max_x, up.max_y, 0xFF555555);
-		
-		gfx_line(con->gfx_ctxt, down.min_x, down.min_y, down.max_x, down.min_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, down.min_x, down.min_y, down.min_x, down.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, down.max_x, down.min_y, down.max_x, down.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, down.min_x, down.max_y, down.max_x, down.max_y, 0xFF555555);
-		
-		gfx_line(con->gfx_ctxt, select.min_x, select.min_y, select.max_x, select.min_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, select.min_x, select.min_y, select.min_x, select.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, select.max_x, select.min_y, select.max_x, select.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, select.min_x, select.max_y, select.max_x, select.max_y, 0xFF555555);
-		
-		gfx_line(con->gfx_ctxt, back.min_x, back.min_y, back.max_x, back.min_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, back.min_x, back.min_y, back.min_x, back.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, back.max_x, back.min_y, back.max_x, back.max_y, 0xFF555555);
-		gfx_line(con->gfx_ctxt, back.min_x, back.max_y, back.max_x, back.max_y, 0xFF555555);
-		
+	
+		DRAW_BUTTON_OUTLINE(con->gfx_ctxt, up);
+		DRAW_BUTTON_OUTLINE(con->gfx_ctxt, down);
+		DRAW_BUTTON_OUTLINE(con->gfx_ctxt, select);
+		DRAW_BUTTON_OUTLINE(con->gfx_ctxt, back);
+
 		con->fillbg = false;
 		gfx_con_setpos(con, up.min_x + (up.max_x - up.min_x) / 2 - 13, up.min_y + (up.max_y - up.min_y - 16) / 2);
 		gfx_putc(con, '/');
@@ -233,6 +229,8 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 		gfx_putc(con, '/');
 		gfx_con_setpos(con, back.min_x + (back.max_x - back.min_x - 16) / 2, back.min_y + (back.max_y - back.min_y) / 2 - 3);
 		gfx_putc(con, '\\');
+		
+		set_active_framebuffer(con->gfx_ctxt->fb);
 
 		struct touch_event event = touch_wait();
 		if (event.y >= up.min_y && event.y <= up.max_y && event.x >= up.min_x && event.x <= up.max_x)

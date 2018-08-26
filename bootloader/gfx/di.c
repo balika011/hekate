@@ -208,14 +208,9 @@ void display_color_screen(u32 color)
 	display_backlight(true);
 }
 
-u32 *display_init_framebuffer()
+void set_active_framebuffer(u32 *address)
 {
-	// Sanitize framebuffer area.
-	memset((u32 *)0xC0000000, 0, 0x3C0000);
 	// This configures the framebuffer @ 0xC0000000 with a resolution of 1280x720 (line stride 768).
+	cfg_display_framebuffer[19].val = address;
 	exec_cfg((u32 *)DISPLAY_A_BASE, cfg_display_framebuffer, 32);
-
-	usleep(35000);
-
-	return (u32 *)0xC0000000;
 }
