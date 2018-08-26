@@ -95,7 +95,7 @@ bool sd_mount()
 
 	if (!sdmmc_storage_init_sd(&sd_storage, &sd_sdmmc, SDMMC_1, SDMMC_BUS_WIDTH_4, 11))
 	{
-		EPRINTF("Failed to init SD card.\nMake sure that it is inserted.");
+		goto onebit;
 	}
 	else
 	{
@@ -110,6 +110,7 @@ bool sd_mount()
 		{
 			if (res == 13)
 			{
+onebit:
 				sdmmc_storage_end(&sd_storage);
 				if (!sdmmc_storage_init_sd(&sd_storage, &sd_sdmmc, SDMMC_1, SDMMC_BUS_WIDTH_1, 11))
 				{
