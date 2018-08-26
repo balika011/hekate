@@ -44,6 +44,7 @@ OBJS = $(addprefix $(BUILD)/$(TARGET)/, \
 	dirlist.o \
 	ini.o \
 	ianos.o \
+	touch.o \
 )
 
 OBJS += $(addprefix $(BUILD)/$(TARGET)/, \

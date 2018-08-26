@@ -58,6 +58,7 @@
 #include "config/config.h"
 #include "ianos/ianos.h"
 #include "utils/dirlist.h"
+#include "utils/touch.h"
 
 #define BLVERSIONMJ 4
 #define BLVERSIONMN 0
@@ -275,6 +276,7 @@ void config_gpios()
 	gpio_output_enable(GPIO_PORT_H, GPIO_PIN_6, GPIO_OUTPUT_DISABLE);
 
 	pinmux_config_i2c(I2C_1);
+	pinmux_config_i2c(I2C_3);
 	pinmux_config_i2c(I2C_5);
 	pinmux_config_uart(UART_A);
 
@@ -283,6 +285,11 @@ void config_gpios()
 	gpio_config(GPIO_PORT_X, GPIO_PIN_7, GPIO_MODE_GPIO);
 	gpio_output_enable(GPIO_PORT_X, GPIO_PIN_6, GPIO_OUTPUT_DISABLE);
 	gpio_output_enable(GPIO_PORT_X, GPIO_PIN_7, GPIO_OUTPUT_DISABLE);
+
+	PINMUX_AUX(PINMUX_AUX_DAP4_SCLK) = PINMUX_PULL_UP | 3;
+	gpio_config(GPIO_PORT_J, GPIO_PIN_7, GPIO_MODE_GPIO);
+	gpio_output_enable(GPIO_PORT_J, GPIO_PIN_7, GPIO_OUTPUT_ENABLE);
+	gpio_write(GPIO_PORT_J, GPIO_PIN_7, GPIO_HIGH);
 }
 
 void config_pmc_scratch()
@@ -383,6 +390,7 @@ void config_hw()
 	clock_enable_cl_dvfs();
 
 	clock_enable_i2c(I2C_1);
+	clock_enable_i2c(I2C_3);
 	clock_enable_i2c(I2C_5);
 
 	static const clock_t clock_unk1 = { CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, 0x42C, 0x1F, 0, 0 };
@@ -391,6 +399,7 @@ void config_hw()
 	clock_enable(&clock_unk2);
 
 	i2c_init(I2C_1);
+	i2c_init(I2C_3);
 	i2c_init(I2C_5);
 
 	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_CNFGBBC, 0x40);
@@ -404,6 +413,10 @@ void config_hw()
 	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_FPS_SD0, 0x4F);
 	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_FPS_SD1, 0x29);
 	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_FPS_SD3, 0x1B);
+
+	// Enables LDO6 for touchscreen AVDD supply
+	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_LDO6_CFG, 0xEA);
+	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_LDO6_CFG2, 0xDA);
 
 	i2c_send_byte(I2C_5, 0x3C, MAX77620_REG_SD0, 42); //42 = (1125000 - 600000) / 12500 -> 1.125V
 
@@ -3018,7 +3031,7 @@ void ipl_main()
 	display_init();
 
 	u32 *fb = display_init_framebuffer();
-	gfx_init_ctxt(&gfx_ctxt, fb, 720, 1280, 768, true);
+	gfx_init_ctxt(&gfx_ctxt, fb, 1280, 720, 768);
 
 	gfx_con_init(&gfx_con, &gfx_ctxt);
 	
@@ -3041,6 +3054,8 @@ void ipl_main()
 	set_default_configuration();
 	// Load saved configuration and auto boot if enabled.
 	auto_launch_firmware();
+	
+	touch_power_on();
 
 	while (1)
 		tui_do_menu(&gfx_con, &menu_top);

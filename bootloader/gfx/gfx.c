@@ -117,13 +117,12 @@ static const u8 _gfx_font[] = {
 	0x00, 0x00, 0x00, 0x4C, 0x32, 0x00, 0x00, 0x00  // Char 126 (~)
 };
 
-void gfx_init_ctxt(gfx_ctxt_t *ctxt, u32 *fb, u32 width, u32 height, u32 stride, bool landscape)
+void gfx_init_ctxt(gfx_ctxt_t *ctxt, u32 *fb, u32 width, u32 height, u32 stride)
 {
 	ctxt->fb = fb;
-	ctxt->width = landscape ? height : width;
-	ctxt->height = landscape ? width : height;
+	ctxt->width = width;
+	ctxt->height = height;
 	ctxt->stride = stride;
-	ctxt->landscape = landscape;
 }
 
 void gfx_clear_grey(gfx_ctxt_t *ctxt, u8 color)
@@ -140,13 +139,8 @@ void gfx_clear_color(gfx_ctxt_t *ctxt, u32 color)
 
 void gfx_clear_partial_grey(gfx_ctxt_t *ctxt, u8 color, u32 pos_x, u32 height)
 {
-	if (ctxt->landscape)
-	{
-		for (u32 x = 0; x < ctxt->width; x++)
-			memset(&ctxt->fb[pos_x + x * ctxt->stride], color, 4 * height);
-	}
-	else
-		memset(&ctxt->fb[pos_x * ctxt->stride], color, 4 * height * ctxt->stride);
+	for (u32 x = 0; x < ctxt->width; x++)
+		memset(&ctxt->fb[pos_x + x * ctxt->stride], color, 4 * height);
 }
 
 void gfx_con_init(gfx_con_t *con, gfx_ctxt_t *ctxt)
@@ -443,10 +437,7 @@ static int abs(int x)
 
 void gfx_set_pixel(gfx_ctxt_t *ctxt, u32 x, u32 y, u32 color)
 {
-	if (ctxt->landscape)
-		ctxt->fb[y + (ctxt->width - x) * ctxt->stride] = color;
-	else
-		ctxt->fb[x + y * ctxt->stride] = color;
+	ctxt->fb[y + (ctxt->width - x) * ctxt->stride] = color;
 }
 
 void gfx_line(gfx_ctxt_t *ctxt, int x0, int y0, int x1, int y1, u32 color)
