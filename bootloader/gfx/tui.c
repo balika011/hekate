@@ -188,6 +188,12 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 		select.max_x = con->gfx_ctxt->width - 30;
 		select.max_y = con->gfx_ctxt->height - 24 - 30;
 		
+		struct button back;
+		back.min_x = con->gfx_ctxt->width - 210;
+		back.min_y = con->gfx_ctxt->height - 24 - 110;
+		back.max_x = con->gfx_ctxt->width - 130;
+		back.max_y = con->gfx_ctxt->height - 24 - 30;
+		
 		gfx_line(con->gfx_ctxt, up.min_x, up.min_y, up.max_x, up.min_y, 0xFF555555);
 		gfx_line(con->gfx_ctxt, up.min_x, up.min_y, up.min_x, up.max_y, 0xFF555555);
 		gfx_line(con->gfx_ctxt, up.max_x, up.min_y, up.max_x, up.max_y, 0xFF555555);
@@ -203,12 +209,31 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 		gfx_line(con->gfx_ctxt, select.max_x, select.min_y, select.max_x, select.max_y, 0xFF555555);
 		gfx_line(con->gfx_ctxt, select.min_x, select.max_y, select.max_x, select.max_y, 0xFF555555);
 		
-		gfx_con_setpos(con, up.min_x + (up.max_x - up.min_x - 16 * 2) / 2, up.min_y + (up.max_y - up.min_y - 16) / 2);
-		gfx_printf(con, "/\\");
-		gfx_con_setpos(con, down.min_x + (down.max_x - down.min_x - 16 * 2) / 2, down.min_y + (down.max_y - down.min_y - 16) / 2);
-		gfx_printf(con, "\\/");
-		gfx_con_setpos(con, select.min_x + (select.max_x - select.min_x - 16) / 2, select.min_y + (select.max_y - select.min_y - 16) / 2);
-		gfx_putc(con, 'x');
+		gfx_line(con->gfx_ctxt, back.min_x, back.min_y, back.max_x, back.min_y, 0xFF555555);
+		gfx_line(con->gfx_ctxt, back.min_x, back.min_y, back.min_x, back.max_y, 0xFF555555);
+		gfx_line(con->gfx_ctxt, back.max_x, back.min_y, back.max_x, back.max_y, 0xFF555555);
+		gfx_line(con->gfx_ctxt, back.min_x, back.max_y, back.max_x, back.max_y, 0xFF555555);
+		
+		con->fillbg = false;
+		gfx_con_setpos(con, up.min_x + (up.max_x - up.min_x) / 2 - 13, up.min_y + (up.max_y - up.min_y - 16) / 2);
+		gfx_putc(con, '/');
+		gfx_con_setpos(con, up.min_x + (up.max_x - up.min_x) / 2 - 3, up.min_y + (up.max_y - up.min_y - 16) / 2);
+		gfx_putc(con, '\\');
+		
+		gfx_con_setpos(con, down.min_x + (down.max_x - down.min_x) / 2 - 13, down.min_y + (down.max_y - down.min_y - 16) / 2);
+		gfx_putc(con, '\\');
+		gfx_con_setpos(con, down.min_x + (down.max_x - down.min_x) / 2 - 3, down.min_y + (down.max_y - down.min_y - 16) / 2);
+		gfx_putc(con, '/');
+		
+		gfx_con_setpos(con, select.min_x + (select.max_x - select.min_x - 16) / 2, select.min_y + (select.max_y - select.min_y) / 2 - 13);
+		gfx_putc(con, '\\');
+		gfx_con_setpos(con, select.min_x + (select.max_x - select.min_x - 16) / 2, select.min_y + (select.max_y - select.min_y) / 2 - 3);
+		gfx_putc(con, '/');
+		
+		gfx_con_setpos(con, back.min_x + (back.max_x - back.min_x - 16) / 2, back.min_y + (back.max_y - back.min_y) / 2 - 13);
+		gfx_putc(con, '/');
+		gfx_con_setpos(con, back.min_x + (back.max_x - back.min_x - 16) / 2, back.min_y + (back.max_y - back.min_y) / 2 - 3);
+		gfx_putc(con, '\\');
 
 		struct touch_event event = touch_wait();
 		if (event.y >= up.min_y && event.y <= up.max_y && event.x >= up.min_x && event.x <= up.max_x)
@@ -239,9 +264,6 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 			case MENT_CHOICE:
 				return ent->data;
 				break;
-			case MENT_BACK:
-				return NULL;
-				break;
 			case MENT_HDLR_RE:
 				ent->handler(ent->data);
 				return NULL;
@@ -254,6 +276,10 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 			gfx_set_rect_rgb(con->gfx_ctxt, Kc_MENU_LOGO,
 				X_MENU_LOGO, Y_MENU_LOGO, X_POS_MENU_LOGO, Y_POS_MENU_LOGO);
 #endif //MENU_LOGO_ENABLE
+		}
+		else if (event.y >= back.min_y && event.y <= back.max_y && event.x >= back.min_x && event.x <= back.max_x)
+		{
+			return NULL;
 		}
 		tui_sbar(con, false);
 	}

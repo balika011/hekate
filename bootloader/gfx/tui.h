@@ -25,10 +25,9 @@
 #define MENT_HANDLER 1
 #define MENT_MENU    2
 #define MENT_CHOICE  3
-#define MENT_BACK    4
-#define MENT_CAPTION 5
-#define MENT_CHGLINE 6
-#define MENT_HDLR_RE 7
+#define MENT_CAPTION 4
+#define MENT_CHGLINE 5
+#define MENT_HDLR_RE 6
 
 typedef struct _ment_t
 {
@@ -55,7 +54,6 @@ typedef struct _menu_t
 #define MDEF_HANDLER(caption, _handler) { MENT_HANDLER, caption, 0, NULL, { .handler = _handler } }
 #define MDEF_HANDLER_EX(caption, data, _handler) { MENT_HANDLER, caption, 0, data, { .handler = _handler } }
 #define MDEF_MENU(caption, _menu) { MENT_MENU, caption, 0, NULL, { .menu = _menu } }
-#define MDEF_BACK() { MENT_BACK, "Back" }
 #define MDEF_CAPTION(caption, color) { MENT_CAPTION, caption, color }
 #define MDEF_CHGLINE() {MENT_CHGLINE}
 

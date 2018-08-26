@@ -146,12 +146,7 @@ void _config_autoboot_list()
 		if (ini_parse(&ini_sections, "bootloader/ini", true))
 		{
 			// Build configuration menu.
-			ments[0].type = MENT_BACK;
-			ments[0].caption = "Back";
-
-			ments[1].type = MENT_CHGLINE;
-
-			u32 i = 2;
+			u32 i = 0;
 			LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_sections, link)
 			{
 				// Skip other ini entries for autoboot.
@@ -177,11 +172,11 @@ void _config_autoboot_list()
 					ments[i].data = &boot_values[i - 1];
 					i++;
 
-					if ((i - 1) > max_entries)
+					if (i > max_entries)
 						break;
 				}
 			}
-			if (i < 3)
+			if (i < 1)
 			{
 				EPRINTF("No launch configurations found.");
 				goto out;
@@ -251,29 +246,24 @@ void config_autoboot()
 		if (ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false))
 		{
 			// Build configuration menu.
-			ments[0].type = MENT_BACK;
-			ments[0].caption = "Back";
-
-			ments[1].type = MENT_CHGLINE;
-
-			ments[2].type = MENT_CHOICE;
+			ments[0].type = MENT_CHOICE;
 			if (!h_cfg.autoboot)
-				ments[2].caption = "*Disable";
+				ments[0].caption = "*Disable";
 			else
-				ments[2].caption = " Disable";
-			ments[2].data = &boot_values[0];
+				ments[0].caption = " Disable";
+			ments[0].data = &boot_values[0];
 
-			ments[3].type = MENT_HANDLER;
+			ments[1].type = MENT_HANDLER;
 			if (h_cfg.autoboot_list)
-				ments[3].caption = "*More configs...";
+				ments[1].caption = "*More configs...";
 			else
-				ments[3].caption = " More configs...";
-			ments[3].handler = _config_autoboot_list;
-			ments[3].data = NULL;
+				ments[1].caption = " More configs...";
+			ments[1].handler = _config_autoboot_list;
+			ments[1].data = NULL;
 
-			ments[4].type = MENT_CHGLINE;
+			ments[2].type = MENT_CHGLINE;
 
-			u32 i = 5;
+			u32 i = 3;
 			LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_sections, link)
 			{
 				// Skip other ini entries for autoboot.
@@ -299,11 +289,11 @@ void config_autoboot()
 					ments[i].data = &boot_values[i - 4];
 					i++;
 
-					if ((i - 4) > max_entries)
+					if ((i - 2) > max_entries)
 						break;
 				}
 			}
-			if (i < 6 && !h_cfg.autoboot_list)
+			if (i < 4 && !h_cfg.autoboot_list)
 			{
 				EPRINTF("No launch configurations found.");
 				goto out;
@@ -364,17 +354,12 @@ void config_bootdelay()
 	for (u32 j = 0; j < delay_entries; j++)
 		delay_values[j] = j;
 
-	ments[0].type = MENT_BACK;
-	ments[0].caption = "Back";
-
-	ments[1].type = MENT_CHGLINE;
-
-	ments[2].type = MENT_CHOICE;
+	ments[0].type = MENT_CHOICE;
 	if (h_cfg.bootwait)
-		ments[2].caption = " 0 seconds (Bootlogo disabled)";
+		ments[0].caption = " 0 seconds (Bootlogo disabled)";
 	else
-		ments[2].caption = "*0 seconds (Bootlogo disabled)";
-	ments[2].data = &delay_values[0];
+		ments[0].caption = "*0 seconds (Bootlogo disabled)";
+	ments[0].data = &delay_values[0];
 
 	u32 i = 0;
 	for (i = 1; i < delay_entries; i++)
@@ -386,12 +371,12 @@ void config_bootdelay()
 		delay_text[i * 32 + 1] = i + '0';
 		memcpy(delay_text + i * 32 + 2, " seconds", 9);
 
-		ments[i + 2].type = MENT_CHOICE;
-		ments[i + 2].caption = delay_text + i * 32;
-		ments[i + 2].data = &delay_values[i];
+		ments[i].type = MENT_CHOICE;
+		ments[i].caption = delay_text + i * 32;
+		ments[i].data = &delay_values[i];
 	}
 
-	memset(&ments[i + 2], 0, sizeof(ment_t));
+	memset(&ments[i], 0, sizeof(ment_t));
 	menu_t menu = {ments, "Time delay for entering bootloader menu", 0, 0};
 
 	u32 *temp_bootwait = (u32 *)tui_do_menu(&gfx_con, &menu);
@@ -430,14 +415,9 @@ void config_verification()
 	for (u32 j = 0; j < 3; j++)
 	{
 		vr_values[j] = j;
-		ments[j + 2].type = MENT_CHOICE;
-		ments[j + 2].data = &vr_values[j];
+		ments[j].type = MENT_CHOICE;
+		ments[j].data = &vr_values[j];
 	}
-
-	ments[0].type = MENT_BACK;
-	ments[0].caption = "Back";
-
-	ments[1].type = MENT_CHGLINE;
 
 	memcpy(vr_text,       " Disable", 9);
 	memcpy(vr_text + 64,  " Sparse (Fast - Not  reliable)", 31);
@@ -448,16 +428,16 @@ void config_verification()
 		if (h_cfg.verification != i)
 		{
 			vr_text[64 * i] = ' ';
-			ments[2 + i].caption = vr_text + (i * 64);
+			ments[i].caption = vr_text + (i * 64);
 		}
 		else
 		{
 			vr_text[64 * i] = '*';
-			ments[2 + i].caption = vr_text + (i * 64);
+			ments[i].caption = vr_text + (i * 64);
 		}
 	}
 
-	memset(&ments[5], 0, sizeof(ment_t));
+	memset(&ments[3], 0, sizeof(ment_t));
 	menu_t menu = {ments, "Backup & Restore verification", 0, 0};
 
 	u32 *temp_verification = (u32 *)tui_do_menu(&gfx_con, &menu);

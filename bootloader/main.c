@@ -1930,17 +1930,13 @@ void launch_tools(u8 type)
 		if (filelist)
 		{
 			// Build configuration menu.
-			ments[0].type = MENT_BACK;
-			ments[0].caption = "Back";
-			ments[1].type = MENT_CHGLINE;
-
 			while (true)
 			{
 				if (i > max_entries || !filelist[i * 256])
 					break;
-				ments[i + 2].type = INI_CHOICE;
-				ments[i + 2].caption = &filelist[i * 256];
-				ments[i + 2].data = &filelist[i * 256];
+				ments[i].type = INI_CHOICE;
+				ments[i].caption = &filelist[i * 256];
+				ments[i].data = &filelist[i * 256];
 
 				i++;
 			}
@@ -1948,7 +1944,7 @@ void launch_tools(u8 type)
 					
 		if (i > 0)
 		{
-			memset(&ments[i + 2], 0, sizeof(ment_t));
+			memset(&ments[i], 0, sizeof(ment_t));
 			menu_t menu = {
 					ments,
 					"Choose a file to launch", 0, 0
@@ -2024,11 +2020,7 @@ void ini_list_launcher()
 		{
 			// Build configuration menu.
 			ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 3));
-			ments[0].type = MENT_BACK;
-			ments[0].caption = "Back";
-			ments[1].type = MENT_CHGLINE;
-
-			u32 i = 2;
+			u32 i = 0;
 			LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_list_sections, link)
 			{
 				if (!strcmp(ini_sec->name, "config") ||
@@ -2041,10 +2033,10 @@ void ini_list_launcher()
 					ments[i].color = ini_sec->color;
 				i++;
 
-				if ((i - 1) > max_entries)
+				if (i > max_entries)
 					break;
 			}
-			if (i > 2)
+			if (i > 0)
 			{
 				memset(&ments[i], 0, sizeof(ment_t));
 				menu_t menu = {
@@ -2120,20 +2112,16 @@ void launch_firmware()
 		{
 			// Build configuration menu.
 			ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 6));
-			ments[0].type = MENT_BACK;
-			ments[0].caption = "Back";
-			ments[1].type = MENT_CHGLINE;
+			ments[0].type = MENT_HANDLER;
+			ments[0].caption = "Payloads...";
+			ments[0].handler = launch_tools_payload;
+			ments[1].type = MENT_HANDLER;
+			ments[1].caption = "More configs...";
+			ments[1].handler = ini_list_launcher;
 
-			ments[2].type = MENT_HANDLER;
-			ments[2].caption = "Payloads...";
-			ments[2].handler = launch_tools_payload;
-			ments[3].type = MENT_HANDLER;
-			ments[3].caption = "More configs...";
-			ments[3].handler = ini_list_launcher;
+			ments[2].type = MENT_CHGLINE;
 
-			ments[4].type = MENT_CHGLINE;
-
-			u32 i = 5;
+			u32 i = 3;
 			LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_sections, link)
 			{
 				if (!strcmp(ini_sec->name, "config") ||
@@ -2146,10 +2134,10 @@ void launch_firmware()
 					ments[i].color = ini_sec->color;
 				i++;
 
-				if ((i - 4) > max_entries)
+				if ((i - 2) > max_entries)
 					break;
 			}
-			if (i > 5)
+			if (i > 3)
 			{
 				memset(&ments[i], 0, sizeof(ment_t));
 				menu_t menu = {
@@ -2435,30 +2423,25 @@ void menu_autorcm()
 	// Create AutoRCM menu.
 	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * 6);
 
-	ments[0].type = MENT_BACK;
-	ments[0].caption = "Back";
-
+	ments[0].type = MENT_CAPTION;
 	ments[1].type = MENT_CHGLINE;
-
-	ments[2].type = MENT_CAPTION;
-	ments[3].type = MENT_CHGLINE;
 	if (disabled)
 	{
-		ments[2].caption = "Status: Disabled!";
-		ments[2].color = 0xFF96FF00;
-		ments[4].caption = "Enable AutoRCM";
-		ments[4].handler = enable_autorcm;
+		ments[0].caption = "Status: Disabled!";
+		ments[0].color = 0xFF96FF00;
+		ments[2].caption = "Enable AutoRCM";
+		ments[2].handler = enable_autorcm;
 	}
 	else
 	{
-		ments[2].caption = "Status: Enabled!";
-		ments[2].color = 0xFFFFBA00;
-		ments[4].caption = "Disable AutoRCM";
-		ments[4].handler = disable_autorcm;
+		ments[0].caption = "Status: Enabled!";
+		ments[0].color = 0xFFFFBA00;
+		ments[2].caption = "Disable AutoRCM";
+		ments[2].handler = disable_autorcm;
 	}
-	ments[4].type = MENT_HDLR_RE;
+	ments[2].type = MENT_HDLR_RE;
 
-	memset(&ments[5], 0, sizeof(ment_t));
+	memset(&ments[3], 0, sizeof(ment_t));
 	menu_t menu = {ments, "This corrupts your BOOT0!", 0, 0};
 
 	tui_do_menu(&gfx_con, &menu);
@@ -2898,8 +2881,6 @@ void about()
 }
 
 ment_t ment_options[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
 	MDEF_HANDLER("Auto boot", config_autoboot),
 	MDEF_HANDLER("Boot time delay", config_bootdelay),
 	MDEF_END()
@@ -2911,8 +2892,6 @@ menu_t menu_options = {
 };
 
 ment_t ment_cinfo[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
 	MDEF_CAPTION("---- SoC Info ----", 0xFF0AB9E6),
 	MDEF_HANDLER("Print fuse info", print_fuseinfo),
 	MDEF_HANDLER("Print kfuse info", print_kfuseinfo),
@@ -2932,8 +2911,6 @@ menu_t menu_cinfo = {
 };
 
 ment_t ment_restore[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
 	MDEF_CAPTION("------ Full --------", 0xFF0AB9E6),
 	MDEF_HANDLER("Restore eMMC BOOT0/1", restore_emmc_boot),
 	MDEF_HANDLER("Restore eMMC RAW GPP (exFAT only)", restore_emmc_rawnand),
@@ -2949,8 +2926,6 @@ menu_t menu_restore = {
 };
 
 ment_t ment_backup[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
 	MDEF_CAPTION("------ Full --------", 0xFF0AB9E6),
 	MDEF_HANDLER("Backup eMMC BOOT0/1", dump_emmc_boot),
 	MDEF_HANDLER("Backup eMMC RAW GPP", dump_emmc_rawnand),
@@ -2967,8 +2942,6 @@ menu_t menu_backup = {
 };
 
 ment_t ment_tools[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Backup & Restore --", 0xFF0AB9E6),
 	MDEF_MENU("Backup", &menu_backup),
 	MDEF_MENU("Restore", &menu_restore),
