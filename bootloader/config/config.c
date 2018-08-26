@@ -33,8 +33,7 @@ extern gfx_con_t gfx_con;
 #define EPRINTFARGS(text, args...) gfx_printf(&gfx_con, "%k"text"%k\n", 0xFFFF0000, args, 0xFFCCCCCC)
 
 extern hekate_config h_cfg;
-extern int sd_mount();
-extern int sd_unmount();
+extern bool sd_mounted;
 
 void set_default_configuration()
 {
@@ -48,7 +47,7 @@ void set_default_configuration()
 
 int create_config_entry()
 {
-	if (!sd_mount())
+	if (!sd_mounted)
 		return 1;
 
 	char lbuf[16];
@@ -113,7 +112,6 @@ int create_config_entry()
 		}
 
 		f_close(&fp);
-		sd_unmount();
 	}
 	else
 		return 1;
@@ -141,7 +139,7 @@ void _config_autoboot_list()
 	for (u32 j = 0; j < max_entries; j++)
 		boot_values[j] = j;
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		if (ini_parse(&ini_sections, "bootloader/ini", true))
 		{
@@ -217,8 +215,6 @@ out2:;
 	free(boot_text);
 	ini_free(&ini_sections);
 
-	sd_unmount();
-
 	if (temp_autoboot == NULL)
 		return;
 }
@@ -241,7 +237,7 @@ void config_autoboot()
 	for (u32 j = 0; j < max_entries; j++)
 		boot_values[j] = j;
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		if (ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false))
 		{
@@ -333,8 +329,6 @@ out2:;
 	free(boot_values);
 	free(boot_text);
 	ini_free(&ini_sections);
-
-	sd_unmount();
 
 	if (temp_autoboot == NULL)
 		return;

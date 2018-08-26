@@ -12,6 +12,7 @@ VPATH = $(dir $(wildcard ./$(SOURCEDIR)/*/)) $(dir $(wildcard ./$(SOURCEDIR)/*/*
 
 OBJS = $(addprefix $(BUILD)/$(TARGET)/, \
 	start.o \
+	pre_main.o \
 	main.o \
 	config.o \
 	btn.o \

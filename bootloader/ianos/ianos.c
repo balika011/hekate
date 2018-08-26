@@ -32,8 +32,6 @@ extern gfx_con_t gfx_con;
 extern heap_t _heap;
 
 extern void *sd_file_read(char *path);
-extern bool sd_mount();
-extern void sd_unmount();
 
 void *elfBuf = NULL;
 void *fileBuf = NULL;
@@ -90,18 +88,11 @@ void ianos_print_error(int errorno)
 }
 
 //TODO: Support shared libraries.
-int ianos_loader(bool sdmount, char *path, elfType_t type, void *moduleConfig)
+int ianos_loader(char *path, elfType_t type, void *moduleConfig)
 {
 	int res = 0;
 
-	if (sdmount)
-		if (!sd_mount())
-			goto elfLoadFinalOut;	
-
 	fileBuf = sd_file_read(path);
-
-	if (sdmount)
-		sd_unmount();
 
 	if (!fileBuf)
 	{
@@ -125,7 +116,6 @@ int ianos_loader(bool sdmount, char *path, elfType_t type, void *moduleConfig)
 	case EXEC_ELF:
 	case AR64_ELF:
 		elfBuf = (void *)DRAM_LIB_ADDR;
-		sd_unmount();
 		break;
 	default:
 		elfBuf = memalign(ctx.align, ctx.memsz);

@@ -299,13 +299,12 @@ void print_fuseinfo()
 	u32 btn = btn_wait();
 	if (btn & BTN_POWER)
 	{
-		if (sd_mount())
+		if (sd_mounted)
 		{
 			char path[64];
 			emmcsn_path_impl(path, "/dumps", "fuses.bin", NULL);
 			if (!sd_save_to_file((u8 *)0x7000F900, 0x2FC, path))
 				gfx_puts(&gfx_con, "\nDone!\n");
-			sd_unmount();
 		}
 
 		btn_wait();
@@ -329,13 +328,12 @@ void print_kfuseinfo()
 	u32 btn = btn_wait();
 	if (btn & BTN_POWER)
 	{
-		if (sd_mount())
+		if (sd_mounted)
 		{
 			char path[64];
 			emmcsn_path_impl(path, "/dumps", "kfuses.bin", NULL);
 			if (!sd_save_to_file((u8 *)buf, KFUSE_NUM_WORDS * 4, path))
 				gfx_puts(&gfx_con, "\nDone!\n");
-			sd_unmount();
 		}
 
 		btn_wait();
@@ -505,7 +503,7 @@ void print_sdcard_info()
 	gfx_clear_partial_grey(&gfx_ctxt, 0x1B, 0, gfx_ctxt.height - 24);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		u32 capacity;
 
@@ -546,7 +544,6 @@ void print_sdcard_info()
 		gfx_printf(&gfx_con, "%kFound %s volume:%k\n Free:    %d MiB\n Cluster: %d KiB\n",
 				0xFF00DDFF, sd_fs.fs_type == FS_EXFAT ? "exFAT" : "FAT32", 0xFFCCCCCC,
 				sd_fs.free_clst * sd_fs.csize >> SECTORS_TO_MIB_COEFF, (sd_fs.csize > 1) ? (sd_fs.csize >> 1) : 512);
-		sd_unmount();
 	}
 
 	btn_wait();
@@ -596,13 +593,12 @@ void print_tsec_key()
 	u32 btn = btn_wait();
 	if (btn & BTN_POWER)
 	{
-		if (sd_mount())
+		if (sd_mounted)
 		{
 			char path[64];
 			emmcsn_path_impl(path, "/dumps", "tsec_keys.bin", NULL);
 			if (!sd_save_to_file(keys, 0x10 * 3, path))
 				gfx_puts(&gfx_con, "\nDone!\n");
-			sd_unmount();
 		}
 	}
 	else
@@ -1074,7 +1070,7 @@ static void dump_emmc_selected(emmcPartType_t dumpType)
 	tui_sbar(&gfx_con, true);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
-	if (!sd_mount())
+	if (!sd_mounted)
 		goto out;
 
 	gfx_puts(&gfx_con, "Checking for available free space...\n\n");
@@ -1177,7 +1173,6 @@ static void dump_emmc_selected(emmcPartType_t dumpType)
 		gfx_printf(&gfx_con, "\nFinished! Press any key...\n");
 
 out:
-	sd_unmount();
 	btn_wait();
 }
 
@@ -1341,7 +1336,7 @@ static void restore_emmc_selected(emmcPartType_t restoreType)
 	if (!(btn & BTN_POWER))
 		goto out;
 
-	if (!sd_mount())
+	if (!sd_mounted)
 		goto out;
 
 	sdmmc_storage_t storage;
@@ -1426,7 +1421,6 @@ static void restore_emmc_selected(emmcPartType_t restoreType)
 		gfx_printf(&gfx_con, "\nFinished! Press any key...\n");
 
 out:
-	sd_unmount();
 	btn_wait();
 }
 
@@ -1445,7 +1439,7 @@ void dump_packages12()
 	gfx_clear_partial_grey(&gfx_ctxt, 0x1B, 0, gfx_ctxt.height - 24);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
-	if (!sd_mount())
+	if (!sd_mounted)
 		goto out;
 
 	sdmmc_storage_t storage;
@@ -1577,7 +1571,6 @@ out:
 	free(pkg2);
 	nx_emmc_gpt_free(&gpt);
 	sdmmc_storage_end(&storage);
-	sd_unmount();
 
 	btn_wait();
 }
@@ -1619,13 +1612,12 @@ int launch_payload(char *path, bool update)
 	if (!path)
 		return 1;
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		FIL fp;
 		if (f_open(&fp, path, FA_READ))
 		{
 			EPRINTFARGS("Payload file is missing!\n(%s)", path);
-			sd_unmount();
 
 			return 1;
 		}
@@ -1642,7 +1634,6 @@ int launch_payload(char *path, bool update)
 		if (f_read(&fp, buf, size, NULL))
 		{
 			f_close(&fp);
-			sd_unmount();
 
 			return 1;
 		}
@@ -1669,7 +1660,6 @@ int launch_payload(char *path, bool update)
 				return 1;
 			free(update_ft);
 		}
-		sd_unmount();
 
 		if (size < 0x30000)
 		{
@@ -1699,7 +1689,7 @@ void auto_launch_update()
 		*(vu32 *)BOOTLOADER_UPDATED_MAGIC_ADDR = 0;
 	else
 	{
-		if (sd_mount())
+		if (sd_mounted)
 		{
 			if (f_open(&fp, "bootloader/update.bin", FA_READ))
 				return;
@@ -1725,7 +1715,7 @@ void launch_tools(u8 type)
 	gfx_clear_grey(&gfx_ctxt, 0x1B);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		dir = (char *)malloc(256);
 
@@ -1767,7 +1757,6 @@ void launch_tools(u8 type)
 			{
 				free(ments);
 				free(filelist);
-				sd_unmount();
 				return;
 			}
 		}
@@ -1798,7 +1787,7 @@ void launch_tools(u8 type)
 				EPRINTF("Failed to launch payload.");
 		}
 		else
-			ianos_loader(true, dir, DRAM_LIB, NULL);
+			ianos_loader(dir, DRAM_LIB, NULL);
 #ifdef MENU_LOGO_ENABLE
 		Kc_MENU_LOGO = (u8 *)malloc(0x6000);
 		blz_uncompress_srcdest(Kc_MENU_LOGO_blz, SZ_MENU_LOGO_BLZ, Kc_MENU_LOGO, SZ_MENU_LOGO);
@@ -1806,7 +1795,6 @@ void launch_tools(u8 type)
 	}
 
 out:
-	sd_unmount();
 
 	btn_wait();
 }
@@ -1825,7 +1813,7 @@ void ini_list_launcher()
 	gfx_clear_grey(&gfx_ctxt, 0x1B);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		if (ini_parse(&ini_list_sections, "bootloader/ini", true))
 		{
@@ -1917,7 +1905,7 @@ void launch_firmware()
 	gfx_clear_grey(&gfx_ctxt, 0x1B);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		if (ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false))
 		{
@@ -1959,7 +1947,6 @@ void launch_firmware()
 				{
 					free(ments);
 					ini_free(&ini_sections);
-					sd_unmount();
 					return;
 				}
 			}
@@ -2006,7 +1993,6 @@ void launch_firmware()
 
 out:
 	ini_free_section(cfg_sec);
-	sd_unmount();
 
 	btn_wait();
 }
@@ -2023,7 +2009,7 @@ void auto_launch_firmware()
 
 	gfx_con.mute = true;
 
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		if (ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false))
 		{
@@ -2154,7 +2140,6 @@ out:
 		ini_free(&ini_list_sections);
 	ini_free_section(cfg_sec);
 
-	sd_unmount();
 	gfx_con.mute = false;
 }
 
@@ -2337,7 +2322,7 @@ void fix_sd_attr(u32 type)
 	char label[14];
 
 	u32 total = 0;
-	if (sd_mount())
+	if (sd_mounted)
 	{
 		switch (type)
 		{
@@ -2355,7 +2340,6 @@ void fix_sd_attr(u32 type)
 		gfx_printf(&gfx_con, "Traversing all %s files!\nThis may take some time, please wait...\n\n", label);
 		fix_attributes(path, &total, !type, type);
 		gfx_printf(&gfx_con, "%kTotal archive bits cleared: %d!%k\n\nDone! Press any key...", 0xFF96FF00, total, 0xFFCCCCCC);
-		sd_unmount();
 	}
 	btn_wait();
 }
@@ -2511,7 +2495,7 @@ void print_battery_info()
 
 	if (btn & BTN_POWER)
 	{
-		if (sd_mount())
+		if (sd_mounted)
 		{
 			char path[64];
 			emmcsn_path_impl(path, "/dumps", "fuel_gauge.bin", NULL);
@@ -2519,7 +2503,6 @@ void print_battery_info()
 				EPRINTF("\nError creating fuel.bin file.");
 			else
 				gfx_puts(&gfx_con, "\nDone!\n");
-			sd_unmount();
 		}
 
 		btn_wait();
@@ -2823,7 +2806,8 @@ int main()
 	blz_uncompress_srcdest(Kc_MENU_LOGO_blz, SZ_MENU_LOGO_BLZ, Kc_MENU_LOGO, SZ_MENU_LOGO);
 #endif //MENU_LOGO_ENABLE
 
-	//ianos_loader(true, "bootloader/sys/libsys_lp0.bso", DRAM_LIB, (void *)sdram_get_params());
+	if (sd_mount())
+		ianos_loader("bootloader/sys/libsys_lp0.bso", DRAM_LIB, (void *)sdram_get_params());
 
 	set_default_configuration();
 	// Load saved configuration and auto boot if enabled.
