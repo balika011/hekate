@@ -2624,52 +2624,40 @@ void fix_battery_desync()
 void about()
 {
 	static const char credits[] =
-		"\nhekate     (C) 2018 naehrwert, st4rk\n\n"
-		"CTCaer mod (C) 2018 CTCaer\n"
-		" ___________________________________________\n\n"
-		"Thanks to: %kderrek, nedwill, plutoo,\n"
-		"           shuffle2, smea, thexyz, yellows8%k\n"
-		" ___________________________________________\n\n"
-		"Greetings to: fincs, hexkyz, SciresM,\n"
-		"              Shiny Quagsire, WinterMute\n"
-		" ___________________________________________\n\n"
-		"Open source and free packages used:\n\n"
+		"\n"
+		"Copyright (C) 2018 naehrwert\n"
+		"Copyright (C) 2018 st4rk\n"
+		"Copyright (C) 2018 CTCaer\n"
+		"Copyright (C) 2018 balika011\n"
+		"\n"
+		"\n"
+		"\n"
+		"Thanks to: %kderrek, nedwill, plutoo, shuffle2, smea, thexyz, yellows8%k\n"
+		"\n"
+		"\n"
+		"Greetings to: fincs, hexkyz, SciresM, Shiny Quagsire, WinterMute\n"
+		"\n"
+		"\n"
+		"Open source and free packages used:\n"
+		"\n"
 		" - FatFs R0.13b,\n"
-		"   Copyright (C) 2018, ChaN\n\n"
+		"   Copyright (C) 2018, ChaN\n"
+		"\n"
 		" - bcl-1.2.0,\n"
-		"   Copyright (C) 2003-2006, Marcus Geelnard\n\n"
+		"   Copyright (C) 2003-2006, Marcus Geelnard\n"
+		"\n"
 		" - Atmosphere (SE sha256, prc id patches),\n"
-		"   Copyright (C) 2018, Atmosphere-NX\n\n"
+		"   Copyright (C) 2018, Atmosphere-NX\n"
+		"\n"
 		" - elfload,\n"
 		"   Copyright (C) 2014, Owen Shepherd\n"
 		"   Copyright (C) 2018, M4xw\n"
-		" ___________________________________________\n\n";
-	static const char octopus[] =
-		"                         %k___\n"
-		"                      .-'   `'.\n"
-		"                     /         \\\n"
-		"                     |         ;\n"
-		"                     |         |           ___.--,\n"
-		"            _.._     |0) = (0) |    _.---'`__.-( (_.\n"
-		"     __.--'`_.. '.__.\\    '--. \\_.-' ,.--'`     `\"\"`\n"
-		"    ( ,.--'`   ',__ /./;   ;, '.__.'`    __\n"
-		"    _`) )  .---.__.' / |   |\\   \\__..--\"\"  \"\"\"--.,_\n"
-		"   `---' .'.''-._.-'`_./  /\\ '.  \\ _.--''````'''--._`-.__.'\n"
-		"         | |  .' _.-' |  |  \\  \\  '.               `----`\n"
-		"          \\ \\/ .'     \\  \\   '. '-._)\n"
-		"           \\/ /        \\  \\    `=.__`'-.\n"
-		"           / /\\         `) )    / / `\"\".`\\\n"
-		"     , _.-'.'\\ \\        / /    ( (     / /\n"
-		"      `--'`   ) )    .-'.'      '.'.  | (\n"
-		"             (/`    ( (`          ) )  '-;   %k[switchbrew]%k\n"
-		"              `      '-;         (-'%k";
+		"\n";
 
 	gfx_clear_grey(&gfx_ctxt, 0x1B);
 	gfx_con_setpos(&gfx_con, 0, 0);
 
 	gfx_printf(&gfx_con, credits, 0xFF00CCFF, 0xFFCCCCCC);
-	gfx_con.fntsz = 8;
-	gfx_printf(&gfx_con, octopus, 0xFF00CCFF, 0xFF00FFCC, 0xFF00CCFF, 0xFFCCCCCC);
 
 	btn_wait();
 }
