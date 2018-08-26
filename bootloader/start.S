@@ -67,11 +67,12 @@ _real_start:
 	LDR R2, =__bss_end
 	SUB R2, R2, R0
 	BL memset
-	BL ipl_main
+	
+	BL pre_main
+	LDR SP, =0x90010000
+	/* Tegra/Horizon configuration goes to 0x80000000+, package2 goes to 0xA9800000, we place our heap in between. */
+	LDR R0, =0x90020000
+	BL heap_init
+	BL main
 	B .
 
-.globl pivot_stack
-.type pivot_stack, %function
-pivot_stack:
-	MOV SP, R0
-	BX LR

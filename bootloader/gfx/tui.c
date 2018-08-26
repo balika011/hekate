@@ -112,7 +112,7 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 	{
 		gfx_con_setcol(con, 0xFFCCCCCC, 1, 0xFF1B1B1B);
 		gfx_con_setpos(con, menu->x, menu->y);
-		gfx_printf(con, "[%s]\n\n", menu->caption);
+		gfx_printf(con, "%k%s\n\n", 0xFF0099EE, menu->caption);
 
 		// Skip caption or seperator lines selection.
 		while (menu->ents[idx].type == MENT_CAPTION ||
@@ -159,8 +159,6 @@ void *tui_do_menu(gfx_con_t *con, menu_t *menu)
 
 		// Print help and battery status.
 		gfx_con_getpos(con, &con->savedx,  &con->savedy);
-		gfx_con_setpos(con, 0, con->gfx_ctxt->height - 89);
-		//gfx_printf(con, "%k VOL: Move up/down\n PWR: Select option%k", 0xFF555555, 0xFFCCCCCC);
 
 		struct button
 		{
