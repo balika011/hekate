@@ -23,7 +23,6 @@
 #include "soc/fuse.h"
 #include "soc/pmc.h"
 #include "storage/sdmmc.h"
-//#include "storage/nx_emmc.h"
 
 int pk1_entry;
 
@@ -37,10 +36,10 @@ enum boot_type
 
 typedef struct _BBT
 {
-  u32 numEntries;
-  u8 virtualBlockSize;
-  u8 blockSize;
-  u8 badBlocks[512];
+  u32 num_entries;
+  u8 virtual_block_size;
+  u8 block_size;
+  u8 bad_blocks[512];
   u8 reserved[10];
 } BBT;
 
@@ -57,42 +56,42 @@ typedef struct _BI
   u32 start_block;
   u32 start_page;
   u32 length;
-  u32 loadAddress;
-  u32 entryPoint;
+  u32 load_address;
+  u32 entry_point;
   u32 attribute;
-  u8 cmacSignature[16];
-  u8 rsaSignature[256];
+  u8 cmac_signature[16];
+  u8 rsa_signature[256];
 } BI;
 
 typedef struct _BCT
 {
-  BBT badBlockTable;
-  u8 PKCModulus[256];
-  u8 aesMacSignature[16];
-  u8 rsaPssSignature[256];
-  u32 secProvisioningKeyNumInsecure;
-  u8 secProvisioningKey[32];
+  BBT bad_block_table;
+  u8 PKC_modulus[256];
+  u8 aes_mac_signature[16];
+  u8 rsa_pss_signature[256];
+  u32 sec_provisioning_key_num_insecure;
+  u8 sec_provisioning_key[32];
   u8 _0x444[12];
   KB keyblob;
   u8 _0x500[8];
-  u32 odmData;
+  u32 odm_data;
   u32 reserved0;
-  u8 randomAesBlock[16];
-  u8 uniqueChipId[16];
-  u32 bootDataVersion;
-  u32 blockSizeLog2;
-  u32 pageSizeLog2;
-  u32 partitionSize;
-  u32 numParamSets;
-  u32 devType;
-  u32 devParams[16];
-  u32 numSdramSets;
-  u8 sdramParams[4][1896];
-  u32 numBootloaders;
+  u8 random_aes_block[16];
+  u8 unique_chip_id[16];
+  u32 boot_data_version;
+  u32 block_size_log2;
+  u32 page_size_log2;
+  u32 partition_size;
+  u32 num_param_sets;
+  u32 dev_type;
+  u32 dev_params[16];
+  u32 num_sdram_sets;
+  u8 sdram_params[4][1896];
+  u32 num_bootloaders;
   BI bootloaders[4];
-  u32 enableFailBack;
-  u32 secureDebugControl;
-  u32 secProvisioningKeyNumSecure;
+  u32 enable_fail_back;
+  u32 secure_debug_control;
+  u32 sec_provisioning_key_num_secure;
   u8 reserved2[12];
   u8 padding[8];
 } BCT;
@@ -100,8 +99,8 @@ typedef struct _BCT
 typedef struct _BLI
 {
   u32 active;
-  u32 field_4;
-  u32 field_8;
+  u32 start_block;
+  u32 start_page;
   u32 len;
   u32 signed_start;
   u32 signature;
@@ -110,7 +109,7 @@ typedef struct _BLI
 typedef struct _BIT
 {
   u8 gap0[12];
-  enum boot_type boottype;
+  enum boot_type boot_type;
   u8 gap10[56];
   u32 bct_len;
   BCT *bct;
@@ -154,21 +153,21 @@ void bootrom()
 	// Read BCT.
 	sdmmc_storage_set_mmc_partition(&storage, 1);
 	BCT *bct = (BCT *) 0x40000100;
-	sdmmc_storage_read(&storage, 0, 0x3000 / 0x200, bct);
+	sdmmc_storage_read(&storage, 0, (sizeof(BCT) + 0x1FF) / 0x200, bct);
 		
 	// Read package1.
-	u32 block_size = 1 << bct->blockSizeLog2;
+	u32 block_size = 1 << bct->block_size_log2;
 	u32 pk1_block = bct->bootloaders[0].start_block;
 	u32 pk1_len = bct->bootloaders[0].length;
-	void *pkg1 = (void *) bct->bootloaders[0].loadAddress;
-	pk1_entry = bct->bootloaders[0].entryPoint;
+	void *pkg1 = (void *) bct->bootloaders[0].load_address;
+	pk1_entry = bct->bootloaders[0].entry_point;
 	
 	sdmmc_storage_set_mmc_partition(&storage, 1);
 	sdmmc_storage_read(&storage, (pk1_block * block_size) / 0x200, pk1_len / 0x200, pkg1);
 
 	sdmmc_storage_end(&storage);
 	
-	bit->boottype = BOOT_TYPE_COLD;
+	bit->boot_type = BOOT_TYPE_COLD;
 	bit->bct_len = sizeof(BCT);
 	bit->bct = bct;
 	bit->bli[0].active = 1;
