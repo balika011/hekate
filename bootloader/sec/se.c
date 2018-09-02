@@ -2,6 +2,7 @@
  * Copyright (c) 2018 naehrwert
  * Copyright (c) 2018 CTCaer
  * Copyright (c) 2018 Atmosphère-NX
+ * Copyright (c) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -19,7 +20,6 @@
 #include <string.h>
 
 #include "../sec/se.h"
-#include "../mem/heap.h"
 #include "../soc/t210.h"
 #include "../sec/se_t210.h"
 #include "../utils/util.h"
@@ -54,12 +54,6 @@ static void _se_ll_init(se_ll_t *ll, u32 addr, u32 size)
 	ll->size = size;
 }
 
-static void _se_ll_set(se_ll_t *dst, se_ll_t *src)
-{
-	SE(SE_IN_LL_ADDR_REG_OFFSET) = (u32)src;
-	SE(SE_OUT_LL_ADDR_REG_OFFSET) = (u32)dst;
-}
-
 static int _se_wait()
 {
 	while (!(SE(SE_INT_STATUS_REG_OFFSET) & SE_INT_OP_DONE(INT_SET)))
@@ -73,32 +67,25 @@ static int _se_wait()
 
 static int _se_execute(u32 op, void *dst, u32 dst_size, const void *src, u32 src_size)
 {
-	se_ll_t *ll_dst = NULL, *ll_src = NULL;
+	se_ll_t ll_dst, ll_src;
 
 	if (dst)
 	{
-		ll_dst = (se_ll_t *)malloc(sizeof(se_ll_t));
-		_se_ll_init(ll_dst, (u32)dst, dst_size);
+		_se_ll_init(&ll_dst, (u32)dst, dst_size);
+		SE(SE_OUT_LL_ADDR_REG_OFFSET) = (u32) &ll_dst;
 	}
 
 	if (src)
 	{
-		ll_src = (se_ll_t *)malloc(sizeof(se_ll_t));
-		_se_ll_init(ll_src, (u32)src, src_size);
+		_se_ll_init(&ll_src, (u32)src, src_size);
+		SE(SE_IN_LL_ADDR_REG_OFFSET) = (u32) &ll_src;
 	}
-
-	_se_ll_set(ll_dst, ll_src);
-
+	
 	SE(SE_ERR_STATUS_0) = SE(SE_ERR_STATUS_0);
 	SE(SE_INT_STATUS_REG_OFFSET) = SE(SE_INT_STATUS_REG_OFFSET);
 	SE(SE_OPERATION_REG_OFFSET) = SE_OPERATION(op);
 
 	int res = _se_wait();
-
-	if (src)
-		free(ll_src);
-	if (dst)
-		free(ll_dst);
 
 	return res;
 }
@@ -108,16 +95,15 @@ static int _se_execute_one_block(u32 op, void *dst, u32 dst_size, const void *sr
 	if (!src || !dst)
 		return 0;
 
-	u8 *block = (u8 *)malloc(0x10);
+	u8 block[0x10];
 	memset(block, 0, 0x10);
 
 	SE(SE_BLOCK_COUNT_REG_OFFSET) = 0;
 
-	memcpy(block, src, src_size);
-	int res = _se_execute(op, block, 0x10, block, 0x10);
-	memcpy(dst, block, dst_size);
+	memcpy(&block, src, src_size);
+	int res = _se_execute(op, &block, 0x10, &block, 0x10);
+	memcpy(dst, &block, dst_size);
 	
-	free(block);
 	return res;
 }
 
@@ -216,7 +202,7 @@ int se_aes_crypt_ctr(u32 ks, void *dst, u32 dst_size, const void *src, u32 src_s
 int se_aes_xts_crypt_sec(u32 ks1, u32 ks2, u32 enc, u64 sec, void *dst, void *src, u32 secsize)
 {
 	int res = 0;
-	u8 *tweak = (u8 *)malloc(0x10);
+	u8 tweak[0x10];
 	u8 *pdst = (u8 *)dst;
 	u8 *psrc = (u8 *)src;
 
@@ -226,7 +212,7 @@ int se_aes_xts_crypt_sec(u32 ks1, u32 ks2, u32 enc, u64 sec, void *dst, void *sr
 		tweak[i] = sec & 0xFF;
 		sec >>= 8;
 	}
-	if (!se_aes_crypt_block_ecb(ks1, 1, tweak, tweak))
+	if (!se_aes_crypt_block_ecb(ks1, 1, &tweak, &tweak))
 		goto out;
 
 	//We are assuming a 0x10-aligned sector size in this implementation.
@@ -238,7 +224,7 @@ int se_aes_xts_crypt_sec(u32 ks1, u32 ks2, u32 enc, u64 sec, void *dst, void *sr
 			goto out;
 		for (u32 j = 0; j < 0x10; j++)
 			pdst[j] = pdst[j] ^ tweak[j];
-		_gf256_mul_x(tweak);
+		_gf256_mul_x(&tweak);
 		psrc += 0x10;
 		pdst += 0x10;
 	}
@@ -246,7 +232,6 @@ int se_aes_xts_crypt_sec(u32 ks1, u32 ks2, u32 enc, u64 sec, void *dst, void *sr
 	res = 1;
 
 out:;
-	free(tweak);
 	return res;
 }
 

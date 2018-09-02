@@ -69,11 +69,7 @@ _real_start:
 	SUB R2, R2, R0
 	BL memset
 	
-	BL pre_main
-	LDR SP, =0x90010000
-	/* Tegra/Horizon configuration goes to 0x80000000+, package2 goes to 0xA9800000, we place our heap in between. */
-	LDR R0, =0x90020000
-	BL heap_init
-	BL main
-	B .
+	BL bootrom
 
+	LDR R0, =pk1_entry
+	LDR PC, [R0]

@@ -4,7 +4,7 @@ endif
 
 include $(DEVKITARM)/base_rules
 
-TARGET := hekate
+TARGET := rcm_bootrom
 BUILD := build
 OUTPUT := output
 SOURCEDIR = bootloader
@@ -12,50 +12,19 @@ VPATH = $(dir $(wildcard ./$(SOURCEDIR)/*/)) $(dir $(wildcard ./$(SOURCEDIR)/*/*
 
 OBJS = $(addprefix $(BUILD)/$(TARGET)/, \
 	start.o \
-	pre_main.o \
-	main.o \
-	config.o \
-	btn.o \
-	clock.o \
-	cluster.o \
-	fuse.o \
-	gpio.o \
-	heap.o \
-	hos.o \
-	i2c.o \
-	kfuse.o \
-	bq24193.o \
-	max7762x.o \
-	max17050.o \
-	mc.o \
-	nx_emmc.o \
+	bootrom.o \
+	se.o \
 	sdmmc.o \
 	sdmmc_driver.o \
-	sdram.o \
-	tui.o \
 	util.o \
-	di.o \
-	gfx.o \
-	pinmux.o \
-	pkg1.o \
-	pkg2.o \
-	se.o \
-	tsec.o \
-	uart.o \
-	dirlist.o \
-	ini.o \
-	ianos.o \
-	touch.o \
-)
-
-OBJS += $(addprefix $(BUILD)/$(TARGET)/, \
-	lz.o blz.o \
-	diskio.o ff.o ffunicode.o ffsystem.o \
-	elfload.o elfreloc_arm.o \
+	gpio.o \
+	max7762x.o \
+	clock.o \
+	i2c.o \
 )
 
 ARCH := -march=armv4t -mtune=arm7tdmi -mthumb -mthumb-interwork
-CUSTOMDEFINES := -DMENU_LOGO_ENABLE #-DDEBUG
+CUSTOMDEFINES := #-DDEBUG
 CFLAGS = $(ARCH) -O2 -nostdlib -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-inline -std=gnu11 -Wall $(CUSTOMDEFINES)
 LDFLAGS = $(ARCH) -nostartfiles -lgcc -Wl,--nmagic,--gc-sections
 
@@ -65,8 +34,8 @@ MODULEDIRS := $(wildcard modules/*)
 
 all: $(TARGET).bin
 	@echo -n "Payload size is "
-	@wc -c < $(OUTPUT)/$(TARGET).bin
-	@echo "Max size is 126296 Bytes."
+	@printf "0x%x\n" `wc -c < $(OUTPUT)/$(TARGET).bin`
+	@echo "Max size is 0x1ED58 Bytes."
 
 clean:
 	@rm -rf $(OBJS)

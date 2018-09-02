@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018 naehrwert
  * Copyright (C) 2018 CTCaer
+ * Copyright (C) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -20,7 +21,6 @@
 #include "mmc.h"
 #include "sd.h"
 #include "../utils/util.h"
-#include "../mem/heap.h"
 
 /*#include "gfx.h"
 extern gfx_ctxt_t gfx_ctxt;
@@ -512,13 +512,11 @@ int sdmmc_storage_init_mmc(sdmmc_storage_t *storage, sdmmc_t *sdmmc, u32 id, u32
 		return 0;
 	DPRINTF("[MMC] switched buswidth\n");
 
-	u8 *ext_csd = (u8 *)malloc(512);
+	u8 ext_csd[512];
 	if (!_mmc_storage_get_ext_csd(storage, ext_csd))
 	{
-		free(ext_csd);
 		return 0;
 	}
-	free(ext_csd);
 	DPRINTF("[MMC] got ext_csd\n");
 	_mmc_storage_parse_cid(storage); //This needs to be after csd and ext_csd
 	//gfx_hexdump(&gfx_con, 0, ext_csd, 512);
@@ -1083,10 +1081,9 @@ int sdmmc_storage_init_sd(sdmmc_storage_t *storage, sdmmc_t *sdmmc, u32 id, u32 
 		return 0;
 	DPRINTF("[SD] cleared card detect\n");
 
-	u8 *buf = (u8 *)malloc(512);
+	u8 buf[512];
 	if (!_sd_storage_get_scr(storage, buf))
 	{
-		free(buf);
 		return 0;
 	}
 		
@@ -1098,7 +1095,6 @@ int sdmmc_storage_init_sd(sdmmc_storage_t *storage, sdmmc_t *sdmmc, u32 id, u32 
 	{
 		if (!_sd_storage_execute_app_cmd_type1(storage, &tmp, SD_APP_SET_BUS_WIDTH, SD_BUS_WIDTH_4, 0, R1_STATE_TRAN))
 		{
-			free(buf);
 			return 0;
 		}
 		sdmmc_set_bus_width(storage->sdmmc, SDMMC_BUS_WIDTH_4);
@@ -1111,7 +1107,6 @@ int sdmmc_storage_init_sd(sdmmc_storage_t *storage, sdmmc_t *sdmmc, u32 id, u32 
 	{
 		if (!_sd_storage_enable_highspeed_low_volt(storage, type, buf))
 		{
-			free(buf);
 			return 0;
 		}
 		DPRINTF("[SD] enabled highspeed (low voltage)\n");
@@ -1120,7 +1115,6 @@ int sdmmc_storage_init_sd(sdmmc_storage_t *storage, sdmmc_t *sdmmc, u32 id, u32 
 	{
 		if (!_sd_storage_enable_highspeed_high_volt(storage, buf))
 		{
-			free(buf);
 			return 0;
 		}
 		DPRINTF("[SD] enabled highspeed (high voltage)\n");
@@ -1133,7 +1127,6 @@ int sdmmc_storage_init_sd(sdmmc_storage_t *storage, sdmmc_t *sdmmc, u32 id, u32 
 	if (_sd_storage_get_ssr(storage, buf))
 		DPRINTF("[SD] got sd status\n");
 
-	free(buf);
 	return 1;
 }
 
