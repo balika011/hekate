@@ -69,6 +69,7 @@ _real_start:
 	SUB R2, R2, R0
 	BL memset
 	
+	LDR SP, =0x40008000
 	BL bootrom
 
 	LDR R0, =pk1_entry

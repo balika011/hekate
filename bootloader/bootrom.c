@@ -142,8 +142,8 @@ void bootrom()
 	SYSREG(AHB_AHB_SPARE_REG) &= 0xFFFFFF9F;
 	PMC(APBDEV_PMC_SCRATCH49) = ((PMC(APBDEV_PMC_SCRATCH49) >> 1) << 1) & 0xFFFFFFFD;
 	
-	memset((u8 *) 0x40000000, 0, 0x8000);
-	//memset((u8 *) 0x40010000, 0, 0x3FFFF);
+	memset((u8 *) 0x40000000, 0, 0x3000);
+	memset((u8 *) 0x40010000, 0, 0x3FFFF);
 	
 	sdmmc_storage_t storage;
 	sdmmc_t sdmmc;
