@@ -154,6 +154,8 @@ void bootrom()
 	sdmmc_storage_set_mmc_partition(&storage, 1);
 	BCT *bct = (BCT *) 0x40000100;
 	sdmmc_storage_read(&storage, 0, (sizeof(BCT) + 0x1FF) / 0x200, bct);
+	
+	bct->PKC_modulus[0] = 0xF7;
 		
 	// Read package1.
 	u32 block_size = 1 << bct->block_size_log2;
@@ -163,7 +165,7 @@ void bootrom()
 	pk1_entry = bct->bootloaders[0].entry_point;
 	
 	sdmmc_storage_set_mmc_partition(&storage, 1);
-	sdmmc_storage_read(&storage, (pk1_block * block_size) / 0x200, pk1_len / 0x200, pkg1);
+	sdmmc_storage_read(&storage, (pk1_block * block_size) / 0x200, (pk1_len + 0x1FF) / 0x200, pkg1);
 
 	sdmmc_storage_end(&storage);
 	
