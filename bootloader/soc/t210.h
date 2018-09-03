@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2018 naehrwert
+* Copyright (c) 2018 CTCaer
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms and conditions of the GNU General Public License,
@@ -93,6 +94,7 @@
 #define I2S(off) _REG(I2S_BASE, off)
 
 /*! Misc registers. */
+#define APB_MISC_PP_STRAPPING_OPT_A 0x08
 #define APB_MISC_PP_PINMUX_GLOBAL 0x40
 #define APB_MISC_GP_WIFI_EN_CFGPADCTRL 0xB64
 #define APB_MISC_GP_WIFI_RST_CFGPADCTRL 0xB68
