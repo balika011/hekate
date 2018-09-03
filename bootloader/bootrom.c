@@ -20,6 +20,7 @@
 #include "soc/t210.h"
 #include "sec/se.h"
 #include "sec/se_t210.h"
+#include "mem/mc.h"
 #include "soc/fuse.h"
 #include "soc/pmc.h"
 #include "storage/sdmmc.h"
@@ -144,6 +145,8 @@ void bootrom()
 	
 	memset((u8 *) 0x40000000, 0, 0x3000);
 	memset((u8 *) 0x40010000, 0, 0x3FFFF);
+
+	mc_enable();
 	
 	sdmmc_storage_t storage;
 	sdmmc_t sdmmc;
@@ -155,6 +158,7 @@ void bootrom()
 	BCT *bct = (BCT *) 0x40000100;
 	sdmmc_storage_read(&storage, 0, (sizeof(BCT) + 0x1FF) / 0x200, bct);
 	
+	// This is not check but, let's be nice.
 	bct->PKC_modulus[0] = 0xF7;
 		
 	// Read package1.

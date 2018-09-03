@@ -21,6 +21,7 @@ OBJS = $(addprefix $(BUILD)/$(TARGET)/, \
 	max7762x.o \
 	clock.o \
 	i2c.o \
+	mc.o \
 )
 
 ARCH := -march=armv4t -mtune=arm7tdmi -mthumb -mthumb-interwork
